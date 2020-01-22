@@ -4,16 +4,21 @@ import logging
 import json
 
 class Sensor (object):
-    def __init__(self, client):
+    def __init__(self, client, interval):
         self._sense = SenseHat()
         self.client = client
-        self.client.subscribe()
+        self.client.subscribe(self._on_command)
+        self._pubTimer = interval
+        self._pubMove = 1
         self._pub = False
-        self.pubfreq = 10
+        self.press = ""
+        self.exit = True
         self._logger = logging.getLogger('raspberry-pi.dojot.agent')
-        w = (150, 150, 150)
+        self._sense.clear()
+        w = (255, 255, 255)
         b = (0, 0, 255)
         e = (0, 0, 0)
+        g = (0,0,0)
 
         self.imageMiddle = [
             e,e,e,e,e,e,e,e,
@@ -65,6 +70,17 @@ class Sensor (object):
             e,e,e,e,e,e,e,e,
             e,e,e,e,e,e,e,e
             ]
+        self.treadmill = [
+            g,g,g,g,g,g,g,g,
+            g,g,g,g,g,g,g,g,
+            w,w,w,w,w,w,w,w,
+            w,w,w,w,w,w,w,w,
+            g,g,g,g,g,g,g,g,
+            w,w,w,w,w,w,w,w,
+            w,w,w,w,w,w,w,w,
+            g,g,g,g,g,g,g,g
+        ]
+
 
     def _read_sensors(self):
         self._logger.info("Getting Temperature ...")
@@ -104,39 +120,68 @@ class Sensor (object):
 
         return x, y, z
 
+    def joystick(self):
+        for self.event in self._sense.stick.get_events():
+            if(self.event.action == "pressed"):
+                if(self.event.direction=="up"):
+                    press = self.event.direction
+                elif(self.event.direction=="down"):
+                    press = self.event.direction
+                if(self.event.direction=="middle"):
+                    self._logger.info("Sensor Stopped")
+                    press = self.event.direction
+                    self._sense.clear()
+                return press
+
     def run(self):
         while True:
-            x, y, z = self._read_accelerometer()
-
-            if (x==0.0 and y==0.0 and z==1.0):
-                self._sense.set_pixels(self.imageMiddle)
-            elif(x==0.0 and y==1.0 and z==0.0):
-                self._sense.set_pixels(self.imageUp)
-                message = "Looking Up"
-                self.client.alert(message)
-            elif(x==0.0 and y==-1.0 and z==0.0):
-                self._sense.set_pixels(self.imageDown)
-                message = "Looking Down"
-                self.client.alert(message)
-            elif(x==-1.0 and y==0.0 and z==0.0): 
-                self._sense.set_pixels(self.imageRight)
-                message = "Looking Right"
-                self.client.alert(message)
-            elif(x==1.0 and y==0.0 and z==0.0): 
-                self._sense.set_pixels(self.imageLeft)
-                message = "Looking Left"
-                self.client.alert(message)
-            
-            #self.client.subscribe()
-            time.sleep(0.5)
-    
-    def setTimer(self, time):
-        self.pubfreq = time
-        print("*********************************************************************")
-        print(self.pubfreq)
-        print("*********************************************************************")
-
-    
+            self.press = self.joystick()
+            if(self.press=="up"):
+                self.exit = False
+                self._sense.clear()
+                self.press = ""
+                while (self.exit == False):
+                    x, y, z = self._read_accelerometer()
+                    self.press = self.joystick()
+                    if(self.press=="middle"):
+                        self.exit = True 
+                    elif (x==0.0 and y==0.0 and z==1.0):
+                        self._sense.set_pixels(self.imageMiddle)
+                    elif(x==0.0 and y==1.0 and z==0.0):
+                        self._sense.set_pixels(self.imageUp)
+                        message = "Looking Up"
+                        self.client.alert(message)
+                    elif(x==0.0 and y==-1.0 and z==0.0):
+                        self._sense.set_pixels(self.imageDown)
+                        message = "Looking Down"
+                        self.client.alert(message)
+                    elif(x==-1.0 and y==0.0 and z==0.0): 
+                        self._sense.set_pixels(self.imageRight)
+                        message = "Looking Right"
+                        self.client.alert(message)
+                    elif(x==1.0 and y==0.0 and z==0.0): 
+                        self._sense.set_pixels(self.imageLeft)
+                        message = "Looking Left"
+                        self.client.alert(message)                
+                    time.sleep(0.5)
+            elif (self.press == "down"):
+                self._logger.info("Monitoring Speed")
+                self.exit = False
+                self._sense.clear()
+                self._sense.set_pixels(self.treadmill)
+                i = 0
+                while(self.exit == False):
+                    self.press = self.joystick()
+                    if(self.press=="middle"):
+                        self.exit = True
+                    self._sense.set_pixel(i,4,(200,0,0))
+                    i += 1
+                    time.sleep(self._pubMove)
+                    if(i>0):
+                        self._sense.set_pixel(i-1,4,(0,0,0))
+                    if(i==8):
+                        i = 0
+                                                               
     def runMeasures(self):
         while True:
             temperature, humidity, pressure, alert = self._read_sensors()
@@ -146,4 +191,19 @@ class Sensor (object):
                     'pressure': pressure}
             
             self.client.publish(json.dumps(data))
-            time.sleep(self.pubfreq)
+            time.sleep(self._pubTimer)
+
+    def _on_command(self, _mqttc, _obj, msg):
+        try:
+            command = json.loads(msg.payload.decode())
+        except json.JSONDecodeError:
+            self._logger.error("Command is not coded a JSON")
+            return 
+        self._logger.info("Received command %s", command)
+
+        if ('pubTimer' in command):
+            self._pubTimer = command['pubTimer']
+            self._logger.info("Received message " + str(self._pubTimer))
+        if ('pubMove' in command):
+            self._pubMove = command['pubMove']
+            self._logger.info("Received message " + str(self._pubMove))

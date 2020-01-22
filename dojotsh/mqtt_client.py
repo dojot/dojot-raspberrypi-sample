@@ -4,6 +4,24 @@ import paho.mqtt.client as mqtt
 from dojotsh.sensor import Sensor 
 import logging
 import sys
+import ssl
+import functools
+
+class CertificateError(ValueError):
+    pass
+                                                                                                                                                                        
+old_match_hostname = ssl.match_hostname
+
+@functools.wraps(old_match_hostname)
+def match_hostname_bugfix(cert, hostname):
+    if cert['subjectAltName'][0][1] == hostname:
+        return
+    else:
+        print("*******************************")
+        print(cert['subjectAltName'])
+        raise CertificateError("Hostname don't match!")
+
+ssl.match_hostname = match_hostname_bugfix
 
 class Client (object):
     def __init__(self, host: str, port: int, tenant: str, device_id: str, interval: int):
@@ -12,8 +30,13 @@ class Client (object):
         self.tenant = tenant
         self.device_id = device_id
         self.message = ""
-      #  self.interval = interval
+        self.certs_dir = "/home/pi/workspace/dojot/NewFirmware/certificate-retriever/certs"
+        self.interval = interval
         self.is_connected = False
+
+        self.ca_cert="{}/IOTmidCA.crt".format(self.certs_dir)
+        self.cert_file="{}/{}:{}.crt".format(self.certs_dir, self.tenant, self.device_id)
+        self.key_file="{}/{}:{}.key".format(self.certs_dir, self.tenant, self.device_id)
         self.client_id = "{}:{}".format(self.tenant, self.device_id)
         self.pub_topic = "/{}/{}/attrs".format(self.tenant, self.device_id)
         self.sub_topic = "/{}/{}/config".format(self.tenant, self.device_id)
@@ -21,6 +44,8 @@ class Client (object):
         self._logger = logging.getLogger('raspberry-pi.dojot.agent')
 
         self._mqttc = mqtt.Client(self.client_id)
+        self._mqttc.tls_set(ca_certs=self.ca_cert, certfile=self.cert_file, keyfile=self.key_file, cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLSv1_2)
+        self._mqttc.tls_insecure_set(False)
         self._mqttc.on_connect = self._on_connect
         self._mqttc.on_disconnect = self._on_disconnect
         self._mqttc.on_message = self._on_message
@@ -63,22 +88,7 @@ class Client (object):
             self._logger.info("Publishing " + str(message))
         else: self._logger.info("Client not connected")
 
-    def subscribe(self):
+    def subscribe(self, callback):
         self._logger.info("Subscribing to topic %s", self.sub_topic)
         self._mqttc.subscribe(self.sub_topic)
-        self._mqttc.message_callback_add(self.sub_topic, self._on_command)
-        print(self.message)
-
-    def _on_command(self, _mqttc, _obj, msg):
-        try:
-            command = json.loads(msg.payload.decode())
-        except json.JSONDecodeError:
-            self._logger.error("Command is not coded a JSON")
-            return
-        
-        self._logger.info("Received command %s", command)
-        if 'messages' in command:
-            self.message = command['messages']
-            print(self.message)
-            Sensor.setTimer(self.message)
-            self._logger.info("Received message " + str(self.message))
+        self._mqttc.message_callback_add(self.sub_topic, callback)

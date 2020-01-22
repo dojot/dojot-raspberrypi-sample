@@ -5,6 +5,7 @@ from optparse import OptionParser
 from dojotsh.mqtt_client import Client
 from dojotsh.sensor import Sensor 
 from dojotsh.create import DojotAgent
+from dojotsh.certfieldGenerate import Certfield
 
 # set logger
 logger = logging.getLogger('raspberry-pi.dojot')
@@ -61,18 +62,20 @@ if __name__ == '__main__':
                     options.tenant,
                     options.user,
                     options.password,
-                    options.secure,
-                    options.interval)
+                    options.secure)
 
-    device_id = create._has_dojot_been_set()
+    device_id = create._has_dojot_been_set() 
 
-    client = Client(options.host,
+    
+
+    client = Client(options.gw,
                 options.port,
                 options.tenant,
                 device_id,
                 options.interval)
 
-    sensor = Sensor(client)
+    sensor = Sensor(client,
+                    options.interval)
 
     # Set Thread sensor
     sensorDataThread = Thread(target=sensor.run)

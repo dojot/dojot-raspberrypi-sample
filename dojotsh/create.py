@@ -7,7 +7,7 @@ import paho.mqtt.client as mqtt
 
 class DojotAgent (object):
 
-    def __init__(self, host, port, gw, tenant, user, password, secure, interval):
+    def __init__(self, host, port, gw, tenant, user, password, secure):
         # set logger
         self._logger = logging.getLogger('raspberry-pi.dojot.agent')
 
@@ -19,7 +19,6 @@ class DojotAgent (object):
         self._user = user
         self._password = password
         self._secure = secure
-        self._interval = interval
 
         # get raspberry pi serial number
         self._hw_serial = self._get_raspberry_pi_serial()
@@ -38,9 +37,9 @@ class DojotAgent (object):
             self._logger.error("HTTP POST to get JWT token failed (%s)", response.status_code)
             raise Exception("HTTP POST FAILED {}".format(response.status_code))
         
-        token = response.json()['jwt']
-        self._auth_header = {"Authorization": "Bearer {}".format(token)} #não sei o que faz
-        self._logger.info("Got JWT token %s", token)
+        self._token = response.json()['jwt']
+        self._auth_header = {"Authorization": "Bearer {}".format(self._token)} 
+        self._logger.info("Got JWT token %s", self._token)
 
         # dojot device ID
         self._device_id = self._has_dojot_been_set()
@@ -106,7 +105,10 @@ class DojotAgent (object):
                           {"label": "message",
                            "type": "dynamic",
                            "value_type": "string"},
-                          {"label": "messages",
+                          {"label": "pubTimer",
+                           "type": "actuator",
+                           "value_type": "float"},
+                           {"label": "pubMove",
                            "type": "actuator",
                            "value_type": "float"},
                           {"label": "serial",
