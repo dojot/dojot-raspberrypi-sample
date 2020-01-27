@@ -5,7 +5,7 @@ from optparse import OptionParser
 from dojotsh.mqtt_client import Client
 from dojotsh.sensor import Sensor 
 from dojotsh.create import DojotAgent
-from dojotsh.certfieldGenerate import Certfield
+from certificateretriever.generateLoginPwd import Certs
 
 # set logger
 logger = logging.getLogger('raspberry-pi.dojot')
@@ -30,8 +30,8 @@ if __name__ == '__main__':
                       help="MQTT port to connect to. Defaults to 1883.")
 
     # API Gateway - IP
-    parser.add_option("-G", "--api-gateway", dest="gw", default="127.0.0.1",
-                      help="API Gateway to connect to. Defaults to localhost.")
+    # parser.add_option("-G", "--api-gateway", dest="gw", default="127.0.0.1",
+    #                   help="API Gateway to connect to. Defaults to localhost.")
 
     # dojot - Tenant ID
     parser.add_option("-t", "--tenant", dest="tenant", default="admin",
@@ -53,12 +53,35 @@ if __name__ == '__main__':
     parser.add_option("-i", "--interval", dest="interval", type="int", default=15,
                       help="Polling interval in seconds. Defaults to 15.")
 
+    # overwrite
+    parser.add_option('-w', '--overwrite',
+                        help='Overwrite any existing key or certificate',
+                        action="store_true")
+
+    # DNS
+    parser.add_option('-d', '--dns', dest="dns", 
+                        help='A hostname for identify the device')
+
+    # CANAME
+    parser.add_option('-c', '--caname', type=str,
+                        default='IOTmidCA', dest='caName',
+                        help='Name of the CA to sign the certificate')
+    # Key Length
+    parser.add_option('-k', '--key-length', type=int,
+                        default=2048, dest='keyLength',
+                        help='Key length in bits')
+
+    # skipHttpsVerification
+    parser.add_option('--skip-https-check', action="store_false",
+                        dest='skipHttpsVerification',
+                        help='Will not validate dojot certificate (dangerous)')
+    
+
     (options, args) = parser.parse_args()
     logger.info("Options: %s", str(options))
 
     create = DojotAgent(options.host,
                     options.port,
-                    options.gw,
                     options.tenant,
                     options.user,
                     options.password,
@@ -66,9 +89,12 @@ if __name__ == '__main__':
 
     device_id = create._has_dojot_been_set() 
 
+    certs = Certs(options,
+                device_id)
     
+    certs.generateCerts()
 
-    client = Client(options.gw,
+    client = Client(options.host,
                 options.port,
                 options.tenant,
                 device_id,

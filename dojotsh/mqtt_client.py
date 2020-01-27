@@ -30,7 +30,7 @@ class Client (object):
         self.tenant = tenant
         self.device_id = device_id
         self.message = ""
-        self.certs_dir = "/home/pi/workspace/dojot/NewFirmware/certificate-retriever/certs"
+        self.certs_dir = "./certs"
         self.interval = interval
         self.is_connected = False
 

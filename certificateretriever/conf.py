@@ -2,4 +2,4 @@
 import os
 
 authpath = '/auth'
-certsDir = "./certs/"
+certsDir = "./certs"
