@@ -26,18 +26,21 @@ class DojotAgent (object):
         self._logger.info("Getting JWT Token ...")
         if self._secure:
             url = 'https://{}/auth'.format(self._host)
-        else: url = 'http://{}:8000/auth'.format(self._host)
+        else:
+            url = 'http://{}:8000/auth'.format(self._host)
 
         data = {"username": "{}".format(self._user),
                 "passwd": "{}".format(self._password)}
 
         response = requests.post(url=url, json=data)
         if (response.status_code != 200):
-            self._logger.error("HTTP POST to get JWT token failed (%s)", response.status_code)
+            self._logger.error(
+                                "HTTP POST to get JWT token failed (%s)",
+                                response.status_code)
             raise Exception("HTTP POST FAILED {}".format(response.status_code))
-        
+
         self._token = response.json()['jwt']
-        self._auth_header = {"Authorization": "Bearer {}".format(self._token)} 
+        self._auth_header = {"Authorization": "Bearer {}".format(self._token)}
         self._logger.info("Got JWT token %s", self._token)
 
         # dojot device ID
@@ -47,22 +50,24 @@ class DojotAgent (object):
         if (self._device_id is None):
             self._set_raspberry_pi_in_dojot()
 
-
     def _has_dojot_been_set(self):
         # check whether raspberry has been set in dojot
         if self._secure:
             url = 'https://{}/device'.format(self._host)
-        else: url = 'http://{}:8000/device'.format(self._host)
+        else:
+            url = 'http://{}:8000/device'.format(self._host)
 
         response = requests.get(url=url, headers=self._auth_header)
         if (response.status_code != 200):
-            raise Exception("HTTP POST failed {}.".format(response.status_code))
+            raise Exception(
+                            "HTTP POST failed {}.".format(
+                                response.status_code))
         all_devices = list(response.json()['devices'])
 
         for dev in all_devices:
             if dev['label'] == 'RaspberryPi':
                 return dev['id']
-                
+
         return None
 
     def _get_raspberry_pi_serial(self):
@@ -85,7 +90,8 @@ class DojotAgent (object):
         time.sleep(2)
         if self._secure:
             url = 'https://{}/template'.format(self._host)
-        else: url = 'http://{}:8000/template'.format(self._host)
+        else:
+            url = 'http://{}:8000/template'.format(self._host)
 
         data = {"label": "RaspberryPi-SenseHat",
                 "attrs": [{"label": "protocol",
@@ -107,7 +113,7 @@ class DojotAgent (object):
                           {"label": "pubTimer",
                            "type": "actuator",
                            "value_type": "float"},
-                           {"label": "pubMove",
+                          {"label": "pubMove",
                            "type": "actuator",
                            "value_type": "float"},
                           {"label": "serial",
@@ -118,8 +124,12 @@ class DojotAgent (object):
 
         response = requests.post(url=url, headers=self._auth_header, json=data)
         if response.status_code != 200:
-            self._logger.error("HTTP POST to create template failed (%s).", response.status_code)
-            raise Exception("HTTP POST failed {}.".format(response.status_code))
+            self._logger.error(
+                                "HTTP POST to create template failed (%s).",
+                                response.status_code)
+            raise Exception(
+                            "HTTP POST failed {}.".format(
+                                response.status_code))
 
         template_id = response.json()['template']['id']
         self._logger.info("Created template %s", template_id)
@@ -128,14 +138,21 @@ class DojotAgent (object):
         self._logger.info("Creating raspberry-pi device in dojot ...")
         if self._secure:
             url = 'https://{}/device'.format(self._host)
-        else: url = 'http://{}:8000/device'.format(self._host)
+        else:
+            url = 'http://{}:8000/device'.format(self._host)
 
         data = {"templates": ["{}".format(template_id)],
                 "label": "RaspberryPi"}
         response = requests.post(url=url, headers=self._auth_header, json=data)
         if response.status_code != 200:
-            self._logger.error("HTTP POST to create device failed (%s).", response.status_code)
-            raise Exception("HTTP POST failed {}.".format(response.status_code))
+            self._logger.error(
+                                "HTTP POST to create device failed (%s).",
+                                response.status_code
+                                )
+            raise Exception(
+                            "HTTP POST failed {}.".format(
+                                response.status_code
+                                ))
 
         self._device_id = response.json()['devices'][0]['id']
         self._logger.info("Created device %s", self._device_id)
@@ -143,12 +160,18 @@ class DojotAgent (object):
         # set serial number
         if self._secure:
             url = 'https://{}/device/{}'.format(self._host, self._device_id)
-        else: url = 'http://{}:8000/device/{}'.format(self._host, self._device_id)
+        else:
+            url = 'http://{}:8000/device/{}'.format(
+                self._host, self._device_id
+                )
 
         # Get
         response = requests.get(url=url, headers=self._auth_header)
         if response.status_code != 200:
-            raise Exception("HTTP POST failed {}.".format(response.status_code))
+            raise Exception(
+                            "HTTP POST failed {}.".format(
+                                response.status_code
+                                ))
 
         data = response.json()
         attrs_static = []
@@ -162,6 +185,9 @@ class DojotAgent (object):
         # Put
         response = requests.put(url=url, headers=self._auth_header, json=data)
         if response.status_code != 200:
-            raise Exception("HTTP POST failed {}.".format(response.status_code))
+            raise Exception(
+                            "HTTP POST failed {}.".format(
+                                response.status_code
+                                ))
 
         return self._device_id

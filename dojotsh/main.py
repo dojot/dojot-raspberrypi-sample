@@ -3,7 +3,7 @@ import sys
 from threading import Thread
 from optparse import OptionParser
 from dojotsh.mqtt_client import Client
-from dojotsh.sensor import Sensor 
+from dojotsh.sensor import Sensor
 from dojotsh.create import DojotAgent
 from certificateretriever.generateLoginPwd import Certs
 
@@ -29,10 +29,6 @@ if __name__ == '__main__':
     parser.add_option("-P", "--port", dest="port", type="int", default=1883,
                       help="MQTT port to connect to. Defaults to 1883.")
 
-    # API Gateway - IP
-    # parser.add_option("-G", "--api-gateway", dest="gw", default="127.0.0.1",
-    #                   help="API Gateway to connect to. Defaults to localhost.")
-
     # dojot - Tenant ID
     parser.add_option("-t", "--tenant", dest="tenant", default="admin",
                       help="Tenant identifier in dojot. Defaults to admin.")
@@ -55,11 +51,11 @@ if __name__ == '__main__':
 
     # overwrite
     parser.add_option('-w', '--overwrite',
-                        help='Overwrite any existing key or certificate',
-                        action="store_true")
+                       help='Overwrite any existing key or certificate',
+                       action="store_true")
 
     # DNS
-    parser.add_option('-d', '--dns', dest="dns", 
+    parser.add_option('-d', '--dns', dest="dns",
                         help='A hostname for identify the device')
 
     # CANAME
@@ -75,7 +71,6 @@ if __name__ == '__main__':
     parser.add_option('--skip-https-check', action="store_false",
                         dest='skipHttpsVerification',
                         help='Will not validate dojot certificate (dangerous)')
-    
 
     (options, args) = parser.parse_args()
     logger.info("Options: %s", str(options))
@@ -87,11 +82,11 @@ if __name__ == '__main__':
                     options.password,
                     options.secure)
 
-    device_id = create._has_dojot_been_set() 
+    device_id = create._has_dojot_been_set()
 
     certs = Certs(options,
                 device_id)
-    
+
     certs.generateCerts()
 
     client = Client(options.host,

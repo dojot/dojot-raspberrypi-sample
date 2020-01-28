@@ -16,7 +16,7 @@ setup(
         'sense_hat'
     ],
     python_requires='>=3.0.0',
-    author='Rafael Augusto Scaraficci',
-    author_email='raugusto@cpqd.com.br',
-    url='https://github.com/rascaraficci/dojot-sense-hat',
+    author='Matheus Tenório Resende Ricaldoni',
+    author_email='mresende@cpqd.com.br',
+    url='https://github.com/MatheusTenorio/',
 )
