@@ -1,7 +1,7 @@
 # Raspberry Pi 3 - Sense Hat to Dojot integration
 ## It's a demo environment using a raspberry pi 3 - sense hat on the Dojot IoT platform
 
-This demo has the purpose of integrating a physical device to Dojot with the MQTT protocol. 
+This demo has the purpose of integrating a physical device to Dojot with the MQTT protocol and also to implement a secure connection using TLS. 
 
 It's behavior is divided into two applications that are running in parallel:
 1° The sensors (temperature, humidity and pressure) are periodically read and their data are published at a default interval.
@@ -32,12 +32,21 @@ To execute the code it's necessary to pass some parameters: `Dojot Host`, `Raspb
 python3 -m dojotsh.main -H <Dojot Host> -d <Raspberry IP> -P 8883 
 ```
 The `dojotsh.main` script will configure dojot with the template `RaspberryPi-SenseHat` and the device `RaspberryPi`
+
+The data will be available in dojot as illustrated in the image below.
+
+Accelerometer application.
+
+Running machine application.
 _________________________________________________________________________________________
-GUI
-- execute:
+# GUI
+A python graphical interface was also developed using lib Tkinter, it's used for the dojot actuation on the device, being able to change the publish time of the sensors and the time of the running machine.
+
+- Execute:
+
+```shell
+cd gui
 sudo apt-get install python3-tk
 sudo apt-get install python3-requests
 python3 gui.py
-
-
-Não estou usando: parseArgs.py, agent.py, __init__.py
+```
