@@ -1,27 +1,38 @@
-## Raspberry Pi 3 - Sense Hat to Dojot integration
-# It's a demo environment using a raspberry pi 3 - sense hat on the Dojot IoT platform
+# Raspberry Pi 3 - Sense Hat to Dojot integration
+## It's a demo environment using a raspberry pi 3 - sense hat on the Dojot IoT platform
 
-This project has the purpose of integrating a physical device to Dojot with the MQTT protocol. 
+This demo has the purpose of integrating a physical device to Dojot with the MQTT protocol. 
+
+It's behavior is divided into two applications that are running in parallel:
+1° The sensors (temperature, humidity and pressure) are periodically read and their data are published at a default interval.
+2° Through a joystick it's possible to switch between two actuations on the device:
+- Pressing up: Two eyes are plotted on the LED matrix, using an accelerometer sensor, according to the movement of the device the eyes change position and the movement data are published in real time on Dojot.
+- Pressing down: A running machine is simulated, a red ball is going through the matrix at a default speed
+- Pressing middle: Closes applications
 
 You'll need:
-* [Raspberry Pi 3] (https://www.raspberrypi.org/products/raspberry-pi-3-model-b)
-* [Sense Hat] (https://www.raspberrypi.org/products/sense-hat/)
-* [Running instance of dojot platform] (http://dojotdocs.readthedocs.io/en/latest/installation-guide.html)
+* [Raspberry Pi 3](https://www.raspberrypi.org/products/raspberry-pi-3-model-b)
+* [Sense Hat](https://www.raspberrypi.org/products/sense-hat/)
+* [Running instance of dojot platform](http://dojotdocs.readthedocs.io/en/latest/installation-guide.html)
 
-DEVICE
-1º Passo:
+You must configure your device before starting, run the commands:
+
 ```shell
 sudo apt-get update
 sudo apt-get install sense-hat
 pip3 install paho-mqtt
 pip3 install requests
-git clone ...
-cd diretório
+git clone https://github.com/MatheusTenorio/private-sensehat.git
+cd private-sensehat
 ```
+To execute the code it's necessary to pass some parameters: `Dojot Host`, `Raspberry IP` and `Port`
+- Execute: 
 
-- execute: 
-python3 -m dojotsh.main -H"<host da Dojot>" -d "<IP da raspberry>" -P 8883 
-
+```shell
+python3 -m dojotsh.main -H <Dojot Host> -d <Raspberry IP> -P 8883 
+```
+The `dojotsh.main` script will configure dojot with the template `RaspberryPi-SenseHat` and the device `RaspberryPi`
+_________________________________________________________________________________________
 GUI
 - execute:
 sudo apt-get install python3-tk
