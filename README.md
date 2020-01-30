@@ -1,77 +1,61 @@
-# Dojot Sense Hat Agent
-It integrates Raspberry Pi - Sense Hat with dojot IoT platform.
+# Raspberry Pi 3 - Sense Hat to Dojot integration
+## It's a demo environment using a raspberry pi 3 - sense hat on the Dojot IoT platform
 
-The sensors (temperature, pressure, and humidity) are periodically read and their values are published
-through MQTT protocol to dojot.
+This demo has the purpose of integrating a physical device to Dojot with the MQTT protocol and also to implement a secure connection using TLS. 
 
-Using dojot flow processor you can also send a message to be shown on the Sense Hat display. The message
-should be sent to MQTT topic ```/<tenant>/<device_id>/config``` with payload ```{"attrs": {"message": "<text>"}}```.
-
-# Instructions
+It's behavior is divided into two applications that are running in parallel:
+1° The sensors (temperature, humidity and pressure) are periodically read and their data are published at a default interval.
+2° Through a joystick it's possible to switch between two actuations on the device:
+- Pressing up: Two eyes are plotted on the LED matrix, using an accelerometer sensor, according to the movement of the device the eyes change position and the movement data are published in real time on Dojot.
+- Pressing down: A running machine is simulated, a red ball is going through the matrix at a default speed
+- Pressing middle: Closes applications
 
 You'll need:
-
-* [Running instance of dojot platform](http://dojotdocs.readthedocs.io/en/latest/installation-guide.html)
 * [Raspberry Pi 3](https://www.raspberrypi.org/products/raspberry-pi-3-model-b)
 * [Sense Hat](https://www.raspberrypi.org/products/sense-hat/)
+* [Running instance of dojot platform](http://dojotdocs.readthedocs.io/en/latest/installation-guide.html)
 
-In the Raspberry Pi 3, run:
-
-```shell
-> apt-get install sense-hat
-> git clone https://github.com/rascaraficci/dojot-sense-hat.git
-> cd dojot-sense-hat
-> pip3 install -r requirements.txt
-> python3 -m dojotsh.main -H <dojot HOST>
-```
-
-I advise to install *sense-hat* through *apt-get* instead of *pip* in order to avoid some dependency problems.
-
-The `dojotsh.main` script will configure dojot with the template `Raspberry-Pi-Sense-Hat` and the device
-`Raspberry-pi`, and start sending temperature, pressure and humidity data in intervals of 15 seconds.
-
-The data will be available in dojot as illustrated in the image bellow.
-
-![Raspberry Pi data received by dojot](images/dojot-raspberry-pi-device-details.png)
-
-You can actuate writing a processing flow as illustrated bellow.
-
-![dojot flow for actuation](images/dojot-raspberry-pi-actuation1.jpg)
-
-For every message received by dojot, the flow is processed and an `OK!` is sent to
-the Raspberry Pi that shows it in the Sense Hat Led Matrix.
-
-![Raspberry Pi received a command sent by dojot](images/dojot-raspberry-pi-actuation2.jpg)
-
-# Usage
-
-Some parameters of the script can be adjusted if necessary.
+You must configure your device before starting, run the commands:
 
 ```shell
-> python3 -m dojotsh.main -h
-Usage: main.py [options]
+sudo apt-get install sense-hat
+pip3 install paho-mqtt
+pip3 install requests
+git clone https://github.com/MatheusTenorio/private-sensehat.git
+cd private-sensehat
+```
+To execute the code it's necessary to pass some parameters: `Dojot Host`, `Raspberry IP` and `Port`
+- Execute: 
 
-Options:
-  -h, --help            show this help message and exit
-  -H HOST, --host=HOST  MQTT host to connect to. Defaults to localhost.
-  -P PORT, --port=PORT  MQTT port to connect to. Defaults to 1883.
-  -G GW, --api-gateway=GW
-                        API Gateway to connect to. Defaults to localhost.
-  -t TENANT, --tenant=TENANT
-                        Tenant identifier in dojot. Defaults to admin.
-  -u USER, --user=USER  User identifier in dojot. Defaults to admin.
-  -p PASSWORD, --password=PASSWORD
-                        User password in dojot. Defaults to admin.
-  -s                    Enables https communication with dojot.
-  -i INTERVAL, --interval=INTERVAL
-                        Polling interval in seconds. Defaults to 15.
+```shell
+python3 -m dojotsh.main -H <Dojot Host> -d <Raspberry IP> -P 8883 
 ```
 
-# What to do if I don't have a Sense Hat and not even a Raspberry pi?
+The `dojotsh.main` script will configure dojot with the template `RaspberryPi-SenseHat` and the device `RaspberryPi`
 
-You can emulate the Sense Hat on Linux using the
-[Sense Hat Emulator](https://github.com/RPi-Distro/python-sense-emu).
-In this case, you only need to replace the python package sense_hat by
-the package sense-emu.
+The data will be available in dojot as illustrated in the image below.
+![Raspberry Pi data received by Dojot](images/sensors.png)
 
-![Emulated Sense Hat](images/dojot-emulated-sense-hat.png)
+Accelerometer application.
+![Movement eyes](images/movement_actuation.jpg)
+![Movement publish](images/movement_publish.png)
+
+Running machine application.
+![Running machine actuation](images/running-machine.jpg)
+
+
+# GUI
+A python graphical interface was also developed using lib Tkinter, it's used for the dojot actuation on the device, being able to change the publish time of the sensors and the time of the running machine.
+To send Dojot data to the device, you need to fill in the fields with the correct data. The help button will help to fill them.
+
+The interface is in the image below:
+![GUI](images/GUI.png)
+
+- Execute:
+
+```shell
+cd gui
+sudo apt-get install python3-tk
+sudo apt-get install python3-requests
+python3 gui.py
+```
