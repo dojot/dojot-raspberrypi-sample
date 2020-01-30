@@ -4,7 +4,9 @@
 This demo has the purpose of integrating a physical device to Dojot with the MQTT protocol and also to implement a secure connection using TLS. 
 
 It's behavior is divided into two applications that are running in parallel:
+
 1° The sensors (temperature, humidity and pressure) are periodically read and their data are published at a default interval.
+
 2° Through a joystick it's possible to switch between two actuations on the device:
 - Pressing up: Two eyes are plotted on the LED matrix, using an accelerometer sensor, according to the movement of the device the eyes change position and the movement data are published in real time on Dojot.
 - Pressing down: A running machine is simulated, a red ball is going through the matrix at a default speed
@@ -34,21 +36,27 @@ python3 -m dojotsh.main -H <Dojot Host> -d <Raspberry IP> -P 8883
 The `dojotsh.main` script will configure dojot with the template `RaspberryPi-SenseHat` and the device `RaspberryPi`
 
 The data will be available in dojot as illustrated in the image below.
+
 ![Raspberry Pi data received by Dojot](images/sensors.png)
 
 Accelerometer application.
+
 ![Movement eyes](images/movement_actuation.jpg)
+
 ![Movement publish](images/movement_publish.png)
 
 Running machine application.
+
 ![Running machine actuation](images/running-machine.jpg)
 
 
 # GUI
 A python graphical interface was also developed using lib Tkinter, it's used for the dojot actuation on the device, being able to change the publish time of the sensors and the time of the running machine.
+
 To send Dojot data to the device, you need to fill in the fields with the correct data. The help button will help to fill them.
 
 The interface is in the image below:
+
 ![Graphical Interface](images/GUI.png)
 
 - Execute:
