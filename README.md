@@ -49,7 +49,7 @@ A python graphical interface was also developed using lib Tkinter, it's used for
 To send Dojot data to the device, you need to fill in the fields with the correct data. The help button will help to fill them.
 
 The interface is in the image below:
-![GUI](images/GUI.png)
+![Graphical Interface](images/GUI.png)
 
 - Execute:
 
